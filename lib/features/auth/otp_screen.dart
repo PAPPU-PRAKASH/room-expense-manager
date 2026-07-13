@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../home/home_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
@@ -36,8 +37,16 @@ class _OtpScreenState extends State<OtpScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login Successful")),
-      );
+  const SnackBar(content: Text("Login Successful")),
+);
+
+Navigator.pushAndRemoveUntil(
+  context,
+  MaterialPageRoute(
+    builder: (_) => const HomeScreen(),
+  ),
+  (route) => false,
+);
 
       // TODO: Dashboard Screen par navigate karenge
     } on FirebaseAuthException catch (e) {
