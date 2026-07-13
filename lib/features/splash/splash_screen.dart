@@ -20,7 +20,7 @@ void initState() {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => const LoginScreen(),
+        builder: (_) => LoginScreen(),
       ),
     );
   });

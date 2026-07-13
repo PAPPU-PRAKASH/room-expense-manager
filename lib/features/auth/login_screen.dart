@@ -1,8 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -11,7 +12,57 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController mobileController = TextEditingController();
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   bool isValid = false;
+  bool isLoading = false;
+
+  Future<void> sendOTP() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    await _auth.verifyPhoneNumber(
+      phoneNumber: "+91${mobileController.text}",
+
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await _auth.signInWithCredential(credential);
+      },
+
+      verificationFailed: (FirebaseAuthException e) {
+        setState(() {
+          isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? "Verification Failed"),
+          ),
+        );
+      },
+
+      codeSent: (String verificationId, int? resendToken) {
+        setState(() {
+          isLoading = false;
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => OtpScreen(
+              verificationId: verificationId,
+            ),
+          ),
+        );
+      },
+
+      codeAutoRetrievalTimeout: (String verificationId) {
+        setState(() {
+          isLoading = false;
+        });
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +72,6 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 60),
 
@@ -77,20 +127,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: isValid
-                      ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const OtpScreen(),
-                            ),
-                          );
-                        }
+                  onPressed: (isValid && !isLoading)
+                      ? sendOTP
                       : null,
-                  child: const Text(
-                    "Continue",
-                    style: TextStyle(fontSize: 18),
-                  ),
+                  child: isLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text(
+                          "Continue",
+                          style: TextStyle(fontSize: 18),
+                        ),
                 ),
               ),
 

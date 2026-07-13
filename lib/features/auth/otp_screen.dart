@@ -1,7 +1,55 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class OtpScreen extends StatelessWidget {
-  const OtpScreen({super.key});
+class OtpScreen extends StatefulWidget {
+  final String verificationId;
+
+  const OtpScreen({
+    super.key,
+    required this.verificationId,
+  });
+
+  @override
+  State<OtpScreen> createState() => _OtpScreenState();
+}
+
+class _OtpScreenState extends State<OtpScreen> {
+  final TextEditingController otpController = TextEditingController();
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  bool isLoading = false;
+
+  Future<void> verifyOTP() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: widget.verificationId,
+        smsCode: otpController.text.trim(),
+      );
+
+      await _auth.signInWithCredential(credential);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login Successful")),
+      );
+
+      // TODO: Dashboard Screen par navigate karenge
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? "Invalid OTP")),
+      );
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -9,14 +57,14 @@ class OtpScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("OTP Verification"),
       ),
-      body: const Padding(
-        padding: EdgeInsets.all(24),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-            Text(
+            const Text(
               "Enter OTP",
               style: TextStyle(
                 fontSize: 28,
@@ -24,34 +72,35 @@ class OtpScreen extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
 
-            Text(
+            const Text(
               "We have sent a verification code to your mobile number.",
-              style: TextStyle(
-                color: Colors.grey,
-              ),
+              style: TextStyle(color: Colors.grey),
             ),
 
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
 
             TextField(
+              controller: otpController,
               keyboardType: TextInputType.number,
               maxLength: 6,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: "Enter 6 digit OTP",
                 border: OutlineInputBorder(),
               ),
             ),
 
-            SizedBox(height: 25),
+            const SizedBox(height: 25),
 
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: null,
-                child: Text("Verify"),
+                onPressed: isLoading ? null : verifyOTP,
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Verify"),
               ),
             ),
           ],
