@@ -1,94 +1,145 @@
-# 🚀 Room Expense Manager
+# 📌 Room Expense Manager - Project Status
 
-## Project Information
-
-Project Name: Room Expense Manager
-
-GitHub Repository:
-https://github.com/PAPPU-PRAKASH/room-expense-manager
-
-Package Name:
-com.pappuprakash.roomexpensemanager
-
-Framework:
-Flutter 3.44.6
-
-Dart:
-3.12.2
+Last Updated: 13 July 2026
 
 ---
 
-# ✅ Completed
+# ✅ Project Setup
 
-- Flutter Installed
-- Android Studio Installed
-- Java Configured
-- Android SDK Configured
-- Git Installed
-- GitHub Repository Created
-- Initial Commit & Push Completed
-- Firebase Project Created
-- Android App Registered
-- google-services.json Added
-- FlutterFire CLI Installed
-- Firebase CLI Installed
-- Firebase Login Completed
-- flutterfire configure Completed
-- firebase_options.dart Generated
-- Firebase Initialized in main.dart
-- Splash Screen Created
-- Login Screen Created
-- OTP Screen UI Created
+- [x] Flutter Project Created
+- [x] Clean Folder Structure
+- [x] Git Repository Initialized
+- [x] GitHub Connected
 
 ---
 
-# 🚧 Current Status
+# ✅ Firebase Setup
 
-Firebase packages are compiling.
-First build after Firebase integration is in progress.
-
----
-
-# 🎯 Next Task
-
-- Verify successful Firebase build
-- Enable Phone Authentication
-- Send OTP using Firebase Auth
-- Verify OTP
-- Navigate to Dashboard after login
+- [x] Firebase Project Created
+- [x] Android App Registered
+- [x] FlutterFire CLI Configured
+- [x] Firebase Initialized
+- [x] google-services Integrated
 
 ---
 
-# Planned Features
+# ✅ Authentication
 
-## Authentication
-- Mobile OTP Login
-- User Profile
-
-## Room
-- Create Room
-- Join Room
-- Room Settings
-
-## Expense
-- Add Expense
-- Deposit
-- Split Expense
-
-## Reports
-- Monthly Report
-- Settlement
-- PDF Export
-
-## Notifications
-- Push Notifications
+- [x] Firebase Phone Authentication Enabled
+- [x] OTP Screen Created
+- [x] OTP Verification Working
+- [x] Login Successful
+- [x] User Navigation after Login
 
 ---
 
-# Git Workflow
+# ✅ Firestore
 
-After every completed feature:
+- [x] Firestore Database Created
+- [x] Test Mode Enabled
+- [x] Firestore Service Created
+- [x] User Automatically Saved after Login
+
+Current Firestore Structure
+
+users
+└── uid
+    ├── uid
+    ├── phone
+    ├── name
+    ├── roomId
+    └── createdAt
+
+---
+
+# ✅ Screens Completed
+
+- [x] Splash Screen
+- [x] Login Screen
+- [x] OTP Screen
+- [x] Home Dashboard
+
+---
+
+# 🚧 Currently Working
+
+Profile Completion
+
+Goal:
+
+- Save User Name
+- Update Firestore
+- Check if Profile Exists
+- Skip Profile Screen if Already Completed
+
+---
+
+# 📋 Upcoming Features
+
+## Phase 1
+
+- [ ] Complete Profile
+- [ ] Create Room
+- [ ] Join Room
+
+## Phase 2
+
+- [ ] Members List
+- [ ] Add Expense
+- [ ] Expense History
+- [ ] Edit/Delete Expense
+
+## Phase 3
+
+- [ ] Split Calculation
+- [ ] Settlement
+- [ ] Reports
+
+## Phase 4
+
+- [ ] Notifications
+- [ ] Dark Mode
+- [ ] Profile
+- [ ] Settings
+
+---
+
+# 🛠 Tech Stack
+
+- Flutter
+- Dart
+- Firebase Authentication
+- Cloud Firestore
+- Git
+- GitHub
+
+---
+
+# Current Progress
+
+Overall Progress: **35%**
+
+Completed:
+- Project Setup
+- Firebase Integration
+- OTP Authentication
+- Firestore Integration
+- Home Dashboard
+
+Next Milestone:
+**Complete Profile → Create Room → Join Room**
+
+---
+
+# Git Milestone
+
+Recommended Commit:
 
 git add .
-git commit -m "Meaningful message"
+git commit -m "OTP login, Home Dashboard and Firestore user save completed"
 git push
+
+---
+
+Status:
+🟢 Project is Stable and Ready for the Next Development Phase.
