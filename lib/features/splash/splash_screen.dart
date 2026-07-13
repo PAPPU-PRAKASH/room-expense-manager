@@ -1,13 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
+import '../../services/firestore_service.dart';
+import '../auth/login_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
-import '../../services/firestore_service.dart';
-
-
-import '../auth/login_screen.dart';
-
-import 'package:flutter/material.dart';
+import '../room/room_setup_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,43 +15,71 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
   @override
-void initState() {
-  super.initState();
-  checkLogin();
-}
+  void initState() {
+    super.initState();
+    _checkLogin();
+  }
 
-Future<void> checkLogin() async {
-  await Future.delayed(const Duration(seconds: 2));
+  Future<void> _checkLogin() async {
+    await Future.delayed(const Duration(seconds: 2));
 
-  final user = FirebaseAuth.instance.currentUser;
+    if (!mounted) return;
 
-  if (!mounted) return;
+    final user = FirebaseAuth.instance.currentUser;
 
-  if (user == null) {
+    // User not logged in
+    if (user == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => LoginScreen(),
+        ),
+      );
+      return;
+    }
+
+    final firestore = FirestoreService();
+
+    final isProfileCompleted =
+        await firestore.isProfileCompleted(user.uid);
+
+    if (!mounted) return;
+
+    // Profile not completed
+    if (!isProfileCompleted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const ProfileScreen(),
+        ),
+      );
+      return;
+    }
+
+    final hasRoom = await firestore.hasRoom(user.uid);
+
+    if (!mounted) return;
+
+    // User has no room
+    if (!hasRoom) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const RoomSetupScreen(),
+        ),
+      );
+      return;
+    }
+
+    // Everything completed
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => LoginScreen(),
+        builder: (_) => const HomeScreen(),
       ),
     );
-    return;
   }
-
-  final isCompleted =
-      await FirestoreService().isProfileCompleted(user.uid);
-
-  if (!mounted) return;
-
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) =>
-          isCompleted ? const HomeScreen() : const ProfileScreen(),
-    ),
-  );
-} 
 
   @override
   Widget build(BuildContext context) {
@@ -62,16 +88,13 @@ Future<void> checkLogin() async {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-
+          children: const [
             Icon(
               Icons.account_balance_wallet,
               color: Colors.white,
               size: 90,
             ),
-
             SizedBox(height: 20),
-
             Text(
               "Room Expense Manager",
               style: TextStyle(
@@ -80,9 +103,7 @@ Future<void> checkLogin() async {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             SizedBox(height: 10),
-
             Text(
               "Manage Smartly",
               style: TextStyle(

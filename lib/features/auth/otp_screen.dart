@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../home/home_screen.dart';
+
 import '../../services/firestore_service.dart';
+import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
+import '../room/room_setup_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
@@ -29,53 +31,85 @@ class _OtpScreenState extends State<OtpScreen> {
     });
 
     try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+      final credential = PhoneAuthProvider.credential(
         verificationId: widget.verificationId,
         smsCode: otpController.text.trim(),
       );
 
       await _auth.signInWithCredential(credential);
-      User? user = _auth.currentUser;
 
-if (user != null) {
-  await FirestoreService().saveUser(
-    uid: user.uid,
-    phone: user.phoneNumber ?? "",
-  );
-}
+      final user = _auth.currentUser;
+
+      if (user == null) {
+        throw Exception("User not found");
+      }
+
+      final firestore = FirestoreService();
+
+      await firestore.saveUser(
+        uid: user.uid,
+        phone: user.phoneNumber ?? "",
+      );
+
+      final isProfileCompleted =
+          await firestore.isProfileCompleted(user.uid);
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-  const SnackBar(
-    content: Text("Login Successful"),
-  ),
-);
+      if (!isProfileCompleted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ProfileScreen(),
+          ),
+          (route) => false,
+        );
+        return;
+      }
 
-final isCompleted =
-    await FirestoreService().isProfileCompleted(user!.uid);
+      final hasRoom = await firestore.hasRoom(user.uid);
 
-if (!mounted) return;
+      if (!mounted) return;
 
-Navigator.pushAndRemoveUntil(
-  context,
-  MaterialPageRoute(
-    builder: (_) =>
-        isCompleted ? const HomeScreen() : const ProfileScreen(),
-  ),
-  (route) => false,
-);
-
-      // TODO: Dashboard Screen par navigate karenge
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              hasRoom
+                  ? const HomeScreen()
+                  : const RoomSetupScreen(),
+        ),
+        (route) => false,
+      );
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? "Invalid OTP")),
+        SnackBar(
+          content: Text(e.message ?? "Invalid OTP"),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+        ),
       );
     }
 
-    setState(() {
-      isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    otpController.dispose();
+    super.dispose();
   }
 
   @override
@@ -103,7 +137,9 @@ Navigator.pushAndRemoveUntil(
 
             const Text(
               "We have sent a verification code to your mobile number.",
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Colors.grey,
+              ),
             ),
 
             const SizedBox(height: 40),
@@ -126,7 +162,9 @@ Navigator.pushAndRemoveUntil(
               child: ElevatedButton(
                 onPressed: isLoading ? null : verifyOTP,
                 child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const CircularProgressIndicator(
+                        color: Colors.white,
+                      )
                     : const Text("Verify"),
               ),
             ),

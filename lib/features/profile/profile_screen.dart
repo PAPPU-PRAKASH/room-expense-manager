@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../services/firestore_service.dart';
-import '../home/home_screen.dart';
+import '../room/room_setup_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -47,15 +47,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
+          builder: (_) => const RoomSetupScreen(),
         ),
         (route) => false,
       );
     } catch (e) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-        ),
+        SnackBar(content: Text(e.toString())),
       );
     }
 
@@ -77,7 +77,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Complete Profile"),
-        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -87,27 +86,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 20),
 
             const Text(
-              "Welcome 👋",
+              "Complete Your Profile",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
             const Text(
-              "Please enter your name to continue.",
-              style: TextStyle(
-                color: Colors.grey,
-              ),
+              "Enter your full name to continue.",
             ),
 
             const SizedBox(height: 30),
 
             TextField(
               controller: nameController,
-              textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(
                 labelText: "Full Name",
                 border: OutlineInputBorder(),
@@ -125,7 +120,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ? const CircularProgressIndicator(
                         color: Colors.white,
                       )
-                    : const Text("Save & Continue"),
+                    : const Text("Continue"),
               ),
             ),
           ],

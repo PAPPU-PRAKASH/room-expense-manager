@@ -24,11 +24,13 @@ class FirestoreService {
   }
 
   /// Get user document
-  Future<DocumentSnapshot<Map<String, dynamic>>> getUser(String uid) {
+  Future<DocumentSnapshot<Map<String, dynamic>>> getUser(
+    String uid,
+  ) {
     return _firestore.collection('users').doc(uid).get();
   }
 
-  /// Update user's name
+  /// Update user name
   Future<void> updateUserName({
     required String uid,
     required String name,
@@ -38,7 +40,17 @@ class FirestoreService {
     });
   }
 
-  /// Check whether profile is completed
+  /// Update room id after creating/joining room
+  Future<void> updateRoomId({
+    required String uid,
+    required String roomId,
+  }) async {
+    await _firestore.collection('users').doc(uid).update({
+      'roomId': roomId,
+    });
+  }
+
+  /// Check profile completion
   Future<bool> isProfileCompleted(String uid) async {
     final doc = await getUser(uid);
 
@@ -48,8 +60,19 @@ class FirestoreService {
 
     if (data == null) return false;
 
-    final name = (data['name'] ?? '').toString().trim();
+    return (data['name'] ?? "").toString().trim().isNotEmpty;
+  }
 
-    return name.isNotEmpty;
+  /// Check if user already joined a room
+  Future<bool> hasRoom(String uid) async {
+    final doc = await getUser(uid);
+
+    if (!doc.exists) return false;
+
+    final data = doc.data();
+
+    if (data == null) return false;
+
+    return (data['roomId'] ?? "").toString().trim().isNotEmpty;
   }
 }
