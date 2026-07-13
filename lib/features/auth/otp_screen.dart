@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../home/home_screen.dart';
+import '../../services/firestore_service.dart';
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
@@ -33,6 +34,14 @@ class _OtpScreenState extends State<OtpScreen> {
       );
 
       await _auth.signInWithCredential(credential);
+      User? user = _auth.currentUser;
+
+if (user != null) {
+  await FirestoreService().saveUser(
+    uid: user.uid,
+    phone: user.phoneNumber ?? "",
+  );
+}
 
       if (!mounted) return;
 
