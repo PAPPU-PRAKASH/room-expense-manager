@@ -1,5 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../home/home_screen.dart';
+import '../profile/profile_screen.dart';
+import '../../services/firestore_service.dart';
+
+
 import '../auth/login_screen.dart';
-import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,18 +19,40 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
 
   @override
-  @override
 void initState() {
   super.initState();
+  checkLogin();
+}
 
-  Timer(const Duration(seconds: 2), () {
+Future<void> checkLogin() async {
+  await Future.delayed(const Duration(seconds: 2));
+
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (!mounted) return;
+
+  if (user == null) {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => LoginScreen(),
       ),
     );
-  });
+    return;
+  }
+
+  final isCompleted =
+      await FirestoreService().isProfileCompleted(user.uid);
+
+  if (!mounted) return;
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) =>
+          isCompleted ? const HomeScreen() : const ProfileScreen(),
+    ),
+  );
 } 
 
   @override

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../home/home_screen.dart';
 import '../../services/firestore_service.dart';
+import '../profile/profile_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
@@ -46,13 +47,21 @@ if (user != null) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-  const SnackBar(content: Text("Login Successful")),
+  const SnackBar(
+    content: Text("Login Successful"),
+  ),
 );
+
+final isCompleted =
+    await FirestoreService().isProfileCompleted(user!.uid);
+
+if (!mounted) return;
 
 Navigator.pushAndRemoveUntil(
   context,
   MaterialPageRoute(
-    builder: (_) => const HomeScreen(),
+    builder: (_) =>
+        isCompleted ? const HomeScreen() : const ProfileScreen(),
   ),
   (route) => false,
 );
