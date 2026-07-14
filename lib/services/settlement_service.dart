@@ -7,12 +7,14 @@ class SettlementService {
     BalanceSummary summary,
     List<PaymentModel> payments,
   ) {
+    // Build adjusted balances from expense-only summary
     final adjustedBalances = summary.balances
         .map((balance) => _MemberBalance(balance.memberId, balance.memberName, balance.netBalance))
         .toList();
 
     final balanceLookup = {for (var balance in adjustedBalances) balance.memberId: balance};
 
+    // Apply payments (history) to adjusted balances
     for (final payment in payments) {
       final payer = balanceLookup[payment.fromMemberId];
       final receiver = balanceLookup[payment.toMemberId];
@@ -25,15 +27,21 @@ class SettlementService {
       }
     }
 
+    // Round net balances to 2 decimal places to avoid floating point precision issues
+    for (final b in adjustedBalances) {
+      b.netBalance = double.parse(b.netBalance.toStringAsFixed(2));
+    }
+
+    // Separate payers and receivers after rounding
     final payers = adjustedBalances
-        .where((balance) => balance.netBalance < 0)
-        .map((balance) => _MemberBalance(balance.memberId, balance.memberName, balance.netBalance))
-        .toList();
+      .where((balance) => balance.netBalance < 0.0)
+      .map((balance) => _MemberBalance(balance.memberId, balance.memberName, balance.netBalance))
+      .toList();
 
     final receivers = adjustedBalances
-        .where((balance) => balance.netBalance > 0)
-        .map((balance) => _MemberBalance(balance.memberId, balance.memberName, balance.netBalance))
-        .toList();
+      .where((balance) => balance.netBalance > 0.0)
+      .map((balance) => _MemberBalance(balance.memberId, balance.memberName, balance.netBalance))
+      .toList();
 
     payers.sort((a, b) => a.netBalance.compareTo(b.netBalance));
     receivers.sort((a, b) => b.netBalance.compareTo(a.netBalance));
@@ -45,27 +53,36 @@ class SettlementService {
     while (payerIndex < payers.length && receiverIndex < receivers.length) {
       final payer = payers[payerIndex];
       final receiver = receivers[receiverIndex];
-      final amount = (payer.netBalance.abs() < receiver.netBalance)
+      final rawAmount = (payer.netBalance.abs() < receiver.netBalance)
           ? payer.netBalance.abs()
           : receiver.netBalance;
 
-      transactions.add(SettlementTransactionModel(
-        transactionId: _transactionIdFor(payer.memberId, receiver.memberId),
-        fromMemberId: payer.memberId,
-        fromMemberName: payer.memberName,
-        toMemberId: receiver.memberId,
-        toMemberName: receiver.memberName,
-        amount: amount,
-        reason: 'Generated automatically based on equal expense split.',
-      ));
+      // Round amount to 2 decimals and only add if strictly greater than 0.00
+      final roundedAmount = double.parse(rawAmount.toStringAsFixed(2));
+      if (roundedAmount > 0.0) {
+        transactions.add(SettlementTransactionModel(
+          transactionId: _transactionIdFor(payer.memberId, receiver.memberId),
+          fromMemberId: payer.memberId,
+          fromMemberName: payer.memberName,
+          toMemberId: receiver.memberId,
+          toMemberName: receiver.memberName,
+          amount: roundedAmount,
+          reason: 'Generated automatically based on equal expense split.',
+        ));
 
-      payer.netBalance += amount;
-      receiver.netBalance -= amount;
+        // Apply the rounded transfer
+        payer.netBalance += roundedAmount;
+        receiver.netBalance -= roundedAmount;
+      } else {
+        // Nothing to transfer; break to avoid infinite loop
+        break;
+      }
 
-      if (payer.netBalance == 0) {
+      // Advance indices when balances reach zero (after rounding)
+      if (double.parse(payer.netBalance.toStringAsFixed(2)) == 0.0) {
         payerIndex += 1;
       }
-      if (receiver.netBalance == 0) {
+      if (double.parse(receiver.netBalance.toStringAsFixed(2)) == 0.0) {
         receiverIndex += 1;
       }
     }

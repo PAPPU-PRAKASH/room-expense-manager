@@ -67,19 +67,23 @@ class _SettlementDetailsScreenState extends State<SettlementDetailsScreen> {
   }
 
   Future<void> _handleSavePayment() async {
-    final value = double.tryParse(_amountController.text.trim());
-    final remainingAmount = widget.transaction.amount;
+    final rawValue = double.tryParse(_amountController.text.trim());
+    final remainingRaw = widget.transaction.amount;
 
     setState(() {
       _amountError = null;
     });
 
-    if (value == null) {
+    if (rawValue == null) {
       setState(() {
         _amountError = 'Enter a valid amount.';
       });
       return;
     }
+
+    // Round both entered value and remaining amount to 2 decimal places
+    final value = double.parse(rawValue.toStringAsFixed(2));
+    final remainingRounded = double.parse(remainingRaw.toStringAsFixed(2));
 
     if (value <= 0) {
       setState(() {
@@ -88,9 +92,9 @@ class _SettlementDetailsScreenState extends State<SettlementDetailsScreen> {
       return;
     }
 
-    if (value > remainingAmount) {
+    if (value > remainingRounded) {
       setState(() {
-        _amountError = 'Amount cannot exceed remaining ₹${remainingAmount.toStringAsFixed(2)}.';
+        _amountError = 'Amount cannot exceed remaining ₹${remainingRounded.toStringAsFixed(2)}.';
       });
       return;
     }
@@ -150,7 +154,8 @@ class _SettlementDetailsScreenState extends State<SettlementDetailsScreen> {
           fromMemberName: widget.transaction.fromMemberName,
           toMemberId: widget.transaction.toMemberId,
           toMemberName: widget.transaction.toMemberName,
-          amount: value,
+          // Save rounded amount to ensure consistency
+          amount: double.parse(value.toStringAsFixed(2)),
           paymentMethod: _selectedPaymentMethod,
           paymentDate: _paymentDate,
           notes: _notesController.text.trim(),
