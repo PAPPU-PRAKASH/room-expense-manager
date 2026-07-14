@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -7,16 +6,21 @@ import '../../models/expense_model.dart';
 import '../../services/expense_service.dart';
 import '../../services/member_service.dart';
 
-class AddExpenseScreen extends StatefulWidget {
-  final String roomId;
+class EditExpenseScreen extends StatefulWidget {
+  final ExpenseModel expense;
+  final String paidByName;
 
-  const AddExpenseScreen({super.key, required this.roomId});
+  const EditExpenseScreen({
+    super.key,
+    required this.expense,
+    required this.paidByName,
+  });
 
   @override
-  State<AddExpenseScreen> createState() => _AddExpenseScreenState();
+  State<EditExpenseScreen> createState() => _EditExpenseScreenState();
 }
 
-class _AddExpenseScreenState extends State<AddExpenseScreen> {
+class _EditExpenseScreenState extends State<EditExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
@@ -35,8 +39,33 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   void initState() {
     super.initState();
-    _membersFuture = MemberService().getRoomMembers(widget.roomId);
+    _initializeFields();
+    _membersFuture = MemberService().getRoomMembers(widget.expense.roomId);
+  }
+
+  void _initializeFields() {
+    _titleController.text = widget.expense.title;
+    _amountController.text = widget.expense.amount.toString();
+    _notesController.text = widget.expense.notes ?? '';
+    _expenseDate = widget.expense.expenseDate;
     _dateController.text = _formatDate(_expenseDate);
+    _splitType = widget.expense.splitType;
+    _paidBy = widget.expense.paidBy;
+    _splitBetween.addAll(widget.expense.splitBetween);
+
+    // Initialize split controllers for custom split types
+    if (widget.expense.splitDetails != null) {
+      for (final entry in widget.expense.splitDetails!.entries) {
+        _splitControllers[entry.key] = TextEditingController(
+          text: entry.value.toString(),
+        );
+      }
+    } else {
+      // Create empty controllers for all split members
+      for (final memberId in _splitBetween) {
+        _splitControllers[memberId] = TextEditingController();
+      }
+    }
   }
 
   @override
@@ -90,29 +119,22 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     });
 
     try {
-      final expenseId = FirebaseFirestore.instance
-          .collection('rooms')
-          .doc(widget.roomId)
-          .collection('expenses')
-          .doc()
-          .id;
-
       // Build split details for custom split types
       Map<String, double>? splitDetails;
       if (_splitType != 'equal') {
         splitDetails = _buildSplitDetails(amount);
       }
 
-      final expense = ExpenseModel(
-        expenseId: expenseId,
-        roomId: widget.roomId,
+      final updatedExpense = ExpenseModel(
+        expenseId: widget.expense.expenseId,
+        roomId: widget.expense.roomId,
         title: _titleController.text.trim(),
         amount: amount,
         paidBy: _paidBy!,
         splitBetween: List.from(_splitBetween),
         expenseDate: _expenseDate,
-        createdAt: null,
-        createdBy: currentUser.uid,
+        createdAt: widget.expense.createdAt,
+        createdBy: widget.expense.createdBy,
         splitType: _splitType,
         notes: _notesController.text.trim().isEmpty
             ? null
@@ -120,7 +142,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         splitDetails: splitDetails,
       );
 
-      await ExpenseService().addExpense(expense);
+      await ExpenseService().updateExpense(updatedExpense);
 
       if (!mounted) return;
 
@@ -234,7 +256,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Expense'),
+        title: const Text('Edit Expense'),
       ),
       body: FutureBuilder<List<MemberModel>>(
         future: _membersFuture,
@@ -486,7 +508,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : const Text('Save Expense'),
+                              : const Text('Update Expense'),
                         ),
                       ),
                       const SizedBox(width: 16),

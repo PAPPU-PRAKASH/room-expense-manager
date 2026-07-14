@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/member_model.dart';
 import '../../services/member_service.dart';
 import 'add_member_screen.dart';
+import 'member_statement_screen.dart';
 
 class MembersScreen extends StatefulWidget {
   final String roomId;
@@ -89,6 +90,18 @@ class _MembersScreenState extends State<MembersScreen> {
                     member.role == 'admin' ? 'Admin' : 'Member',
                   ),
                 ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MemberStatementScreen(
+                        roomId: widget.roomId,
+                        memberId: member.memberId,
+                        memberName: member.name,
+                      ),
+                    ),
+                  );
+                },
               );
             },
             separatorBuilder: (context, index) => const Divider(),

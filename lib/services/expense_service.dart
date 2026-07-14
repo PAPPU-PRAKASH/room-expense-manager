@@ -51,4 +51,14 @@ class ExpenseService {
         .doc(expenseId)
         .delete();
   }
+
+  Future<void> updateExpense(ExpenseModel expense) async {
+    final collectionRef = _firestore
+        .collection('rooms')
+        .doc(expense.roomId)
+        .collection('expenses');
+
+    final docRef = collectionRef.doc(expense.expenseId);
+    await docRef.update(expense.toMap());
+  }
 }

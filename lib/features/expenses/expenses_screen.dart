@@ -172,8 +172,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     ),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => ExpenseDetailsScreen(
@@ -182,6 +182,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                             ),
                           ),
                         );
+                        if (result == true) {
+                          setState(() {});
+                        }
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(16),

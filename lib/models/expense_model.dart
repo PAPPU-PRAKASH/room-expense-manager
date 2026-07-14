@@ -12,6 +12,7 @@ class ExpenseModel {
   final String createdBy;
   final String splitType;
   final String? notes;
+  final Map<String, double>? splitDetails; // memberId -> amount (for exact) or percentage (for percentage)
 
   ExpenseModel({
     required this.expenseId,
@@ -25,6 +26,7 @@ class ExpenseModel {
     required this.createdBy,
     this.splitType = 'equal',
     this.notes,
+    this.splitDetails,
   });
 
   Map<String, dynamic> toMap() {
@@ -43,6 +45,10 @@ class ExpenseModel {
       data['notes'] = notes;
     }
 
+    if (splitDetails != null && splitDetails!.isNotEmpty) {
+      data['splitDetails'] = splitDetails;
+    }
+
     data['createdAt'] = createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp();
@@ -54,6 +60,22 @@ class ExpenseModel {
     Map<String, dynamic> map,
     String id,
   ) {
+    Map<String, double>? splitDetails;
+    if (map['splitDetails'] != null) {
+      try {
+        splitDetails = Map<String, double>.from(
+          (map['splitDetails'] as Map).map(
+            (key, value) => MapEntry(
+              key as String,
+              value is num ? value.toDouble() : 0.0,
+            ),
+          ),
+        );
+      } catch (e) {
+        splitDetails = null;
+      }
+    }
+
     return ExpenseModel(
       expenseId: id,
       roomId: map['roomId'] ?? '',
@@ -72,6 +94,7 @@ class ExpenseModel {
       createdBy: map['createdBy'] ?? '',
       splitType: map['splitType'] ?? 'equal',
       notes: map['notes'],
+      splitDetails: splitDetails,
     );
   }
 }
