@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/firestore_service.dart';
 import '../auth/login_screen.dart';
-import '../home/home_screen.dart';
+import '../navigation/main_navigation_screen.dart';
 import '../profile/profile_screen.dart';
 import '../room/room_setup_screen.dart';
 
@@ -76,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => const HomeScreen(),
+        builder: (_) => const MainNavigationScreen(),
       ),
     );
   }

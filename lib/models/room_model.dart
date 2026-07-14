@@ -5,7 +5,6 @@ class RoomModel {
   final String roomCode;
   final String createdBy;
   final int maxMembers;
-  final int membersCount;
 
   RoomModel({
     required this.roomId,
@@ -14,7 +13,6 @@ class RoomModel {
     required this.roomCode,
     required this.createdBy,
     required this.maxMembers,
-    required this.membersCount,
   });
 
   Map<String, dynamic> toMap() {
@@ -25,7 +23,6 @@ class RoomModel {
       'roomCode': roomCode,
       'createdBy': createdBy,
       'maxMembers': maxMembers,
-      'membersCount': membersCount,
     };
   }
 
@@ -37,7 +34,6 @@ class RoomModel {
       roomCode: map['roomCode'] ?? '',
       createdBy: map['createdBy'] ?? '',
       maxMembers: map['maxMembers'] ?? 0,
-      membersCount: map['membersCount'] ?? 0,
     );
   }
 }

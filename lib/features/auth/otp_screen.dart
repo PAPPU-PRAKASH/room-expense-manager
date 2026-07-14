@@ -2,7 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../services/firestore_service.dart';
-import '../home/home_screen.dart';
+import '../../services/member_service.dart';
+import '../navigation/main_navigation_screen.dart';
 import '../profile/profile_screen.dart';
 import '../room/room_setup_screen.dart';
 
@@ -51,6 +52,31 @@ class _OtpScreenState extends State<OtpScreen> {
         phone: user.phoneNumber ?? "",
       );
 
+      final userModel = await firestore.getUserModel(user.uid);
+      final phone = userModel?.phone.trim() ?? '';
+      final roomId = userModel?.roomId;
+      final isRoomMember = userModel?.hasRoom ?? false;
+
+      if (isRoomMember && roomId != null && roomId.isNotEmpty && phone.isNotEmpty) {
+        final memberDoc = await MemberService().findMemberByPhone(
+          roomId: roomId,
+          phone: phone,
+        );
+
+        if (memberDoc != null) {
+          await MemberService().claimMember(
+            roomId: roomId,
+            memberId: memberDoc.id,
+            uid: user.uid,
+          );
+
+          await firestore.updateRoomId(
+            uid: user.uid,
+            roomId: roomId,
+          );
+        }
+      }
+
       final isProfileCompleted =
           await firestore.isProfileCompleted(user.uid);
 
@@ -76,7 +102,7 @@ class _OtpScreenState extends State<OtpScreen> {
         MaterialPageRoute(
           builder: (_) =>
               hasRoom
-                  ? const HomeScreen()
+                  ? const MainNavigationScreen()
                   : const RoomSetupScreen(),
         ),
         (route) => false,

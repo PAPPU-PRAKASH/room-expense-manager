@@ -1,14 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/member_model.dart';
 import '../models/room_model.dart';
 import 'firestore_service.dart';
+import 'member_service.dart';
 
 class RoomService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirestoreService _firestoreService = FirestoreService();
+  final MemberService _memberService = MemberService();
 
   /// Create New Room
-  Future<void> createRoom(RoomModel room) async {
+  Future<void> createRoom(
+    RoomModel room,
+    String creatorName,
+    String creatorPhone,
+  ) async {
     await _firestore.collection('rooms').doc(room.roomId).set({
       ...room.toMap(),
       'createdAt': FieldValue.serverTimestamp(),
@@ -18,6 +25,25 @@ class RoomService {
       uid: room.createdBy,
       roomId: room.roomId,
     );
+
+    final alreadyMember = await _memberService.isMemberExist(
+      roomId: room.roomId,
+      memberId: room.createdBy,
+    );
+
+    if (!alreadyMember) {
+      final creator = MemberModel(
+        memberId: room.createdBy,
+        name: creatorName,
+        phone: creatorPhone,
+        role: 'admin',
+      );
+
+      await _memberService.addMemberToRoom(
+        roomId: room.roomId,
+        member: creator,
+      );
+    }
   }
 
   /// Join Existing Room
@@ -36,21 +62,31 @@ class RoomService {
     }
 
     final roomDoc = query.docs.first;
-
     final roomId = roomDoc.id;
 
-    final data = roomDoc.data();
-
-    final membersCount = (data['membersCount'] ?? 0) as int;
-    final maxMembers = (data['maxMembers'] ?? 0) as int;
-
-    if (membersCount >= maxMembers) {
-      throw Exception("Room is full");
+    final userModel = await _firestoreService.getUserModel(uid);
+    if (userModel == null) {
+      return false;
     }
 
-    await roomDoc.reference.update({
-      'membersCount': FieldValue.increment(1),
-    });
+    final alreadyMember = await _memberService.isMemberExist(
+      roomId: roomId,
+      memberId: uid,
+    );
+
+    if (!alreadyMember) {
+      final member = MemberModel(
+        memberId: uid,
+        name: userModel.name,
+        phone: userModel.phone,
+        role: 'member',
+      );
+
+      await _memberService.addMemberToRoom(
+        roomId: roomId,
+        member: member,
+      );
+    }
 
     await _firestoreService.updateRoomId(
       uid: uid,

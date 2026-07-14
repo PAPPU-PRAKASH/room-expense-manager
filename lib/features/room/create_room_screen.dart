@@ -4,8 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/room_model.dart';
+import '../../services/firestore_service.dart';
 import '../../services/room_service.dart';
-import '../home/home_screen.dart';
+import '../navigation/main_navigation_screen.dart';
 
 class CreateRoomScreen extends StatefulWidget {
   const CreateRoomScreen({super.key});
@@ -54,6 +55,11 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
       final roomId =
           DateTime.now().millisecondsSinceEpoch.toString();
 
+      final userModel = await FirestoreService().getUserModel(user.uid);
+      if (userModel == null) {
+        throw Exception('Unable to load user data');
+      }
+
       final room = RoomModel(
         roomId: roomId,
         roomName: roomNameController.text.trim(),
@@ -61,10 +67,13 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
         roomCode: generateRoomCode(),
         createdBy: user.uid,
         maxMembers: maxMembers,
-        membersCount: 1,
       );
 
-      await RoomService().createRoom(room);
+      await RoomService().createRoom(
+        room,
+        userModel.name,
+        userModel.phone,
+      );
 
       if (!mounted) return;
 
@@ -77,7 +86,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
+          builder: (_) => const MainNavigationScreen(),
         ),
         (route) => false,
       );
@@ -136,7 +145,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
             const SizedBox(height: 20),
 
             DropdownButtonFormField<int>(
-              value: maxMembers,
+              initialValue: maxMembers,
               decoration: const InputDecoration(
                 labelText: "Maximum Members",
                 border: OutlineInputBorder(),

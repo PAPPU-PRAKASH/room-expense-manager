@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  LoginScreen({super.key});
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -30,6 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
       },
 
       verificationFailed: (FirebaseAuthException e) {
+        if (!mounted) return;
         setState(() {
           isLoading = false;
         });
@@ -42,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
       },
 
       codeSent: (String verificationId, int? resendToken) {
+        if (!mounted) return;
         setState(() {
           isLoading = false;
         });
@@ -57,6 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
       },
 
       codeAutoRetrievalTimeout: (String verificationId) {
+        if (!mounted) return;
         setState(() {
           isLoading = false;
         });

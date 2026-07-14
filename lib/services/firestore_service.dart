@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/user_model.dart';
+
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -28,6 +30,18 @@ class FirestoreService {
     String uid,
   ) {
     return _firestore.collection('users').doc(uid).get();
+  }
+
+  /// Get user model
+  Future<UserModel?> getUserModel(String uid) async {
+    final snapshot = await getUser(uid);
+
+    if (!snapshot.exists) return null;
+
+    final data = snapshot.data();
+    if (data == null) return null;
+
+    return UserModel.fromMap(data);
   }
 
   /// Update user name
